@@ -1,0 +1,7 @@
+/snap/clion/237/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/snap/clion/237/bin/ninja/linux/x64/ninja -G Ninja -S /home/ykhdr/opp/lab5 -B /home/ykhdr/opp/lab5/cmake-build-debug
+-- Found MPI_C: /usr/lib/x86_64-linux-gnu/libmpich.so (found version "4.0") 
+-- Found MPI_CXX: /usr/lib/x86_64-linux-gnu/libmpichcxx.so (found version "4.0") 
+-- Found MPI: TRUE (found version "4.0")  
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/ykhdr/opp/lab5/cmake-build-debug

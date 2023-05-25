@@ -1,0 +1,17 @@
+
+lab3:23448 terminated with signal 6 at PC=7fe23aa96a7c SP=7ffd6ae772d0.  Backtrace:
+/lib/x86_64-linux-gnu/libc.so.6(pthread_kill+0x12c)[0x7fe23aa96a7c]
+/lib/x86_64-linux-gnu/libc.so.6(raise+0x16)[0x7fe23aa42476]
+/lib/x86_64-linux-gnu/libc.so.6(abort+0xd3)[0x7fe23aa287f3]
+/lib/x86_64-linux-gnu/libc.so.6(+0x896f6)[0x7fe23aa896f6]
+/lib/x86_64-linux-gnu/libc.so.6(+0xa0d7c)[0x7fe23aaa0d7c]
+/lib/x86_64-linux-gnu/libc.so.6(+0xa415c)[0x7fe23aaa415c]
+/lib/x86_64-linux-gnu/libc.so.6(malloc+0x99)[0x7fe23aaa51b9]
+/lib/x86_64-linux-gnu/libmpich.so.12(+0x2d86e5)[0x7fe23b4d86e5]
+/lib/x86_64-linux-gnu/libmpich.so.12(+0x228258)[0x7fe23b428258]
+/lib/x86_64-linux-gnu/libmpich.so.12(+0x228d87)[0x7fe23b428d87]
+/lib/x86_64-linux-gnu/libmpich.so.12(PMPI_Type_vector+0x1ba)[0x7fe23b2ca81a]
+cmake-build-debug/lab3(+0x1de1)[0x55f2e04a1de1]
+/lib/x86_64-linux-gnu/libc.so.6(+0x29d90)[0x7fe23aa29d90]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x80)[0x7fe23aa29e40]
+cmake-build-debug/lab3(+0x1325)[0x55f2e04a1325]

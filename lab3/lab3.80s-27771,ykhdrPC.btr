@@ -1,0 +1,12 @@
+
+lab3:27771 terminated with signal 11 at PC=7fd4304a3f92 SP=7ffc62a91e00.  Backtrace:
+/lib/x86_64-linux-gnu/libc.so.6(+0xa3f92)[0x7fd4304a3f92]
+/lib/x86_64-linux-gnu/libc.so.6(malloc+0x99)[0x7fd4304a51b9]
+/lib/x86_64-linux-gnu/libmpich.so.12(+0x2d86e5)[0x7fd430ed86e5]
+/lib/x86_64-linux-gnu/libmpich.so.12(+0x228258)[0x7fd430e28258]
+/lib/x86_64-linux-gnu/libmpich.so.12(+0x228d87)[0x7fd430e28d87]
+/lib/x86_64-linux-gnu/libmpich.so.12(PMPI_Type_vector+0x1ba)[0x7fd430cca81a]
+cmake-build-debug/lab3(+0x1dcc)[0x56197e667dcc]
+/lib/x86_64-linux-gnu/libc.so.6(+0x29d90)[0x7fd430429d90]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x80)[0x7fd430429e40]
+cmake-build-debug/lab3(+0x1325)[0x56197e667325]
