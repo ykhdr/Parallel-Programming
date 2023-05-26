@@ -1,7 +1,0 @@
-
-lab1:7017 terminated with signal 11 at PC=55a72af05428 SP=7ffda34dc0b0.  Backtrace:
-cmake-build-debug/lab1(+0x1428)[0x55a72af05428]
-cmake-build-debug/lab1(+0x1830)[0x55a72af05830]
-/lib/x86_64-linux-gnu/libc.so.6(+0x29d90)[0x7f01cb229d90]
-/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x80)[0x7f01cb229e40]
-cmake-build-debug/lab1(+0x1285)[0x55a72af05285]

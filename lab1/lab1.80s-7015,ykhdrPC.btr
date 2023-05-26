@@ -1,7 +1,0 @@
-
-lab1:7015 terminated with signal 6 at PC=7fa7cd496a7c SP=7ffef52a7140.  Backtrace:
-/lib/x86_64-linux-gnu/libc.so.6(pthread_kill+0x12c)[0x7fa7cd496a7c]
-/lib/x86_64-linux-gnu/libc.so.6(raise+0x16)[0x7fa7cd442476]
-/lib/x86_64-linux-gnu/libc.so.6(abort+0xd3)[0x7fa7cd4287f3]
-/lib/x86_64-linux-gnu/libc.so.6(+0x896f6)[0x7fa7cd4896f6]
-/lib/x86_64-linux-gnu/libc.so.6(+0xa0d7c)[0x7fa7cd4a0d7c]
