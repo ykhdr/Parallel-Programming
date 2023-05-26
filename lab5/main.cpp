@@ -6,9 +6,9 @@
 #include <cstdlib>
 
 #define L 1000
-#define LISTS_COUNT 1
+#define LISTS_COUNT 10
 #define TASK_COUNT 787
-#define MIN_TASKS_TO_SHARE 2
+#define MIN_TASKS_TO_SHARE 1
 
 #define EXECUTOR_FINISHED_WORK (-1)
 #define NO_TASKS_TO_SHARE (-565)
@@ -36,16 +36,22 @@ int processCount;
 int processRank;
 int remainingTasks;
 int executedTasks;
+int executedTasksCurrent;
 int additionalTasks;
 double globalRes = 0;
+
+long startWeightCount = 0;
+long endExecutedWeight = 0;
 
 void initializeTaskSet(int *taskSet, int taskCount, int iterCounter) {
     for (int i = 0; i < taskCount; i++) {
         taskSet[i] = abs(50 - i % 100) * abs(processRank - (iterCounter % processCount)) * L;
+        startWeightCount += taskSet[i];
     }
 }
 
 void executeTaskSet(const int *taskSet) {
+    //pthread_mutex_lock(&mutex);
     for (int i = 0; i < remainingTasks; i++) {
         int weight = taskSet[i];
 
@@ -53,9 +59,11 @@ void executeTaskSet(const int *taskSet) {
             globalRes += cos(0.001234);
         }
 
-        executedTasks++;
+        executedTasksCurrent++;
+        endExecutedWeight += weight;
     }
     remainingTasks = 0;
+    //pthread_mutex_unlock(&mutex);
 }
 
 void *ExecutorStartRoutine(void *args) {
@@ -72,19 +80,26 @@ void *ExecutorStartRoutine(void *args) {
         startTime = MPI_Wtime();
         MPI_Barrier(MPI_COMM_WORLD);
 
+        executedTasks = 0;
+        executedTasksCurrent = 0;
+
+        remainingTasks = TASK_COUNT;
+        additionalTasks = 0;
+        executedTasksSum = 0;
+        //startWeightCount = 0;
+        //endExecutedWeight = 0;
+
+
+
         std::cout << ANSI_RED << "[" << processRank << "E] Iteration " << i << ". Initializing tasks. " << ANSI_RESET
                   << std::endl;
         initializeTaskSet(tasks, TASK_COUNT, i);
 
-        executedTasks = 0;
-        remainingTasks = TASK_COUNT;
-        additionalTasks = 0;
-        executedTasksSum = 0;
 
         executeTaskSet(tasks);
+        executedTasks += executedTasksCurrent;
         std::cout << ANSI_BLUE << "[" << processRank << "E] Process executed tasks in " <<
                   MPI_Wtime() - startTime << " Now requesting for some additional. " << ANSI_RESET << std::endl;
-
 
         for (int procIdx = 0; procIdx < processCount; procIdx++) {
 
@@ -94,27 +109,32 @@ void *ExecutorStartRoutine(void *args) {
 
                 MPI_Send(&processRank, 1, MPI_INT, procIdx, 888, MPI_COMM_WORLD);
 
-                std::cout << ANSI_PURPLE << "[" << processRank << "E] waiting for task count" << ANSI_RESET << std::endl;
+                std::cout << ANSI_PURPLE << "[" << processRank << "E] waiting for task count" << ANSI_RESET
+                          << std::endl;
 
                 MPI_Recv(&threadResponse, 1, MPI_INT, procIdx, SENDING_TASK_COUNT_TAG, MPI_COMM_WORLD,
                          MPI_STATUS_IGNORE);
 
-                std::cout << ANSI_WHITE << "[" << processRank << "E] Process " << procIdx << " answered " << threadResponse << ANSI_RESET << std::endl;
+                std::cout << ANSI_WHITE << "[" << processRank << "E] Process " << procIdx << " answered "
+                          << threadResponse << ANSI_RESET << std::endl;
 
                 if (threadResponse != NO_TASKS_TO_SHARE) {
                     additionalTasks = threadResponse;
                     memset(tasks, 0, TASK_COUNT);
 
-                    std::cout << ANSI_PURPLE << "[" << processRank << "E] waiting for tasks" << ANSI_RESET << std::endl;
+                    std::cout << ANSI_PURPLE << "[" << processRank << "E] waiting for tasks" << ANSI_RESET
+                              << std::endl;
 
                     MPI_Recv(tasks, additionalTasks, MPI_INT, procIdx, SENDING_TASKS_TAG, MPI_COMM_WORLD,
                              MPI_STATUS_IGNORE);
 
-                    //pthread_mutex_lock(&mutex);
+                    pthread_mutex_lock(&mutex);
                     remainingTasks = additionalTasks;
-                    //pthread_mutex_unlock(&mutex);
+                    pthread_mutex_unlock(&mutex);
 
+                    executedTasksCurrent = 0;
                     executeTaskSet(tasks);
+                    executedTasks += executedTasksCurrent;
                 }
             }
         }
@@ -125,7 +145,6 @@ void *ExecutorStartRoutine(void *args) {
         MPI_Allreduce(&iterationDuration, &longestIteration, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
         MPI_Allreduce(&iterationDuration, &shortestIteration, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
 
-        MPI_Allreduce(&executedTasks, &executedTasksSum, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
         MPI_Barrier(MPI_COMM_WORLD);
 
@@ -141,15 +160,24 @@ void *ExecutorStartRoutine(void *args) {
         std::cout << ANSI_PURPLE_BG << "[" << processRank << "E] Disbalance rate is " <<
                   ((longestIteration - shortestIteration) / longestIteration) * 100 << "%" << ANSI_RESET << std::endl;
 
-        std::cout << ANSI_YELLOW << "[" << processRank << "E] Tasks summary executed: " << executedTasksSum << ANSI_RESET << std::endl;
-        std::cout << ANSI_YELLOW << "[" << processRank << "E] Tasks on start iteration: " << TASK_COUNT * processCount << ANSI_RESET << std::endl;
+
+        long weightSum = 0;
+        long weightCountSum = 0;
+
+        MPI_Allreduce(&endExecutedWeight, &weightSum, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&startWeightCount, &weightCountSum, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD);
+
+        std::cout << ANSI_PURPLE_BG << "[" << processRank << "E] Tasks weight summary executed: " << weightSum
+                  << ANSI_RESET << std::endl;
+        std::cout << ANSI_PURPLE_BG << "[" << processRank << "E] Tasks weight on start iteration: " << weightCountSum
+                  << ANSI_RESET << std::endl;
     }
 
     std::cout << ANSI_RED << "[" << processRank << "E] Finished iterations, sending signal" << ANSI_RESET << std::endl;
 
-    //pthread_mutex_lock(&mutex);
+    pthread_mutex_lock(&mutex);
     finishedExecution = true;
-    //pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&mutex);
 
     int signal = EXECUTOR_FINISHED_WORK;
 
@@ -176,28 +204,28 @@ void *ReceiverStartRoutine(void *args) {
         }
 
         askingProcRank = pendingMessage;
-        //pthread_mutex_lock(&mutex);
+        pthread_mutex_lock(&mutex);
 
         std::cout << ANSI_YELLOW << "[" << processRank << "R] Process " << askingProcRank << " requested tasks. I have "
                   <<
                   remainingTasks << " tasks now. " << ANSI_RESET << std::endl;
 
         if (remainingTasks >= MIN_TASKS_TO_SHARE) {
-            answer = remainingTasks / (processCount * 2);
+            answer = (remainingTasks - executedTasksCurrent) / (processCount);
+            remainingTasks -= answer;
 
             std::cout << ANSI_PURPLE << "[" << processRank << "R] Sharing " << answer << " tasks. " << ANSI_RESET
                       << std::endl;
 
             MPI_Send(&answer, 1, MPI_INT, askingProcRank, SENDING_TASK_COUNT_TAG, MPI_COMM_WORLD);
-            MPI_Send(&tasks[remainingTasks - answer], answer, MPI_INT, askingProcRank, SENDING_TASKS_TAG,
+            MPI_Send(&tasks[remainingTasks], answer, MPI_INT, askingProcRank, SENDING_TASKS_TAG,
                      MPI_COMM_WORLD);
-            remainingTasks -= answer;
         } else {
             answer = NO_TASKS_TO_SHARE;
             MPI_Send(&answer, 1, MPI_INT, askingProcRank, SENDING_TASK_COUNT_TAG, MPI_COMM_WORLD);
         }
 
-        //pthread_mutex_unlock(&mutex);
+       pthread_mutex_unlock(&mutex);
     }
 
     pthread_exit(nullptr);
